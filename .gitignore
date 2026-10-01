@@ -2,3 +2,4 @@
 zig-out/
 *.o
 zxxd
+in.bin

@@ -4,14 +4,13 @@ const hex = "0123456789abcdef";
 const row_width = 78;
 const bytes_per_row = 16;
 
-fn printRow(interface: *std.Io.Writer, offset: usize, row: []const u8) !void {
-    var printbuf: [row_width]u8 = undefined;
-    const off: u32 = @intCast(offset);
+fn printRow(interface: *std.Io.Writer, offset: u32, row: []const u8) !void {
+    var printbuf = interface.buffer;
     var pos: usize = 0;
 
     for (0..8) |i| {
         const shift: u5 = @intCast((7 - i) * 4);
-        printbuf[pos] = hex[(off >> shift) & 0x0f];
+        printbuf[pos] = hex[(offset >> shift) & 0x0f];
         pos += 1;
     }
 
@@ -65,7 +64,7 @@ pub fn main(init: std.process.Init) !void {
             error.EndOfStream => {
                 const tail = stdin.interface.buffered();
                 if (tail.len != 0) {
-                    try printRow(&stdout.interface, offset, tail);
+                    try printRow(&stdout.interface, @intCast(offset), tail);
                     _ = try stdin.interface.discard(.limited(tail.len));
                 }
                 break;
@@ -73,7 +72,7 @@ pub fn main(init: std.process.Init) !void {
             else => return err,
         };
         if (row.len == 0) break;
-        try printRow(&stdout.interface, offset, row);
+        try printRow(&stdout.interface, @intCast(offset), row);
         offset += row.len;
         _ = try stdin.interface.discard(.limited(row.len));
     }
